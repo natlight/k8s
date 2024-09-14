@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin
+  namespace: media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jellyfin
+  template:
+    metadata:
+      labels:
+        app: jellyfin
+    spec:
+      containers:
+        - name: jellyfin
+          image: lscr.io/linuxserver/jellyfin:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8096
+              name: 8096tcp
+              protocol: TCP
+          env:
+            - name: PUID
+              value: '1000'
+            - name: PGID
+              value: '1000'
+          resources:
+            limits:
+              gpu.intel.com/i915: '1'
+          volumeMounts:
+            - mountPath: /media/tn-tv
+              name: tn-tv
+            - mountPath: /media/tn-movies
+              name: tn-movies
+            - mountPath: /config
+              name: jelly-config-local
+            - mountPath: /media/tn-golf
+              name: jelly-golf-nfs
+            - mountPath: /media/tn-meditation
+              name: jelly-meditation-nfs
+            - mountPath: /aaa
+              name: jelly-aaa-nfs
+            - mountPath: /prerolls
+              name: jelly-preroll-nfs
+            - mountPath: /music
+              name: jelly-music-nfs
+            - mountPath: /backup
+              name: jelly-backup-nfs
+      nodeName: n100
+      volumes:
+        - name: tn-tv
+          nfs:
+            path: /mnt/server/media/tv
+            server: 192.168.50.187
+        - name: tn-movies
+          nfs:
+            path: /mnt/server/media/movies
+            server: 192.168.50.187
+        - name: jelly-config-local
+          persistentVolumeClaim:
+            claimName: jelly-config-local-pvc
+        - name: jelly-golf-nfs
+          persistentVolumeClaim:
+            claimName: jelly-golf-nfs-pvc
+        - name: jelly-meditation-nfs
+          persistentVolumeClaim:
+            claimName: jelly-meditation-nfs-pvc
+        - name: jelly-aaa-nfs
+          nfs:
+            path: /mnt/server/media/aaa
+            server: 192.168.50.187
+        - name: jelly-preroll-nfs
+          nfs:
+            path: /mnt/server/media/prerolls
+            server: 192.168.50.187
+        - name: jelly-music-nfs
+          nfs:
+            path: /mnt/server/media/music
+            server: 192.168.50.187
+        - name: jelly-backup-nfs
+          nfs:
+            path: /mnt/cloud/media-server-backups
+            server: 192.168.50.187
